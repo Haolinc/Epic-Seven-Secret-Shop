@@ -1,7 +1,4 @@
-import threading
 import time
-from imaplib import Flags
-
 import adbutils
 import aircv as ac
 import numpy
@@ -64,19 +61,19 @@ class Utilities:
             tup = self.find_image(source_img, target_img)
             result = tup.get("result")
             print(f"identifier: {identifier}, value: {str(tup)}")
-            if is_multi_click is not True:
-                self.device.click(result[0], result[1])
-            else:
+            if is_multi_click:
                 for click in range(0, random.randrange(2, 4)):
                     self.device.click(result[0], result[1])
                     time.sleep(0.2)
+            else:
+                self.device.click(result[0], result[1])
             return True
         except Exception as e:
             print(f"Unable to find image, Exception: {e}, identifier: {identifier}")
             is_expedition = self.check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             # Re-click on target with new screenshot
-            return self.click_target(self.get_numpy_screenshot(), target_img, identifier, retry_count - 1)
+            return self.click_target(self.get_numpy_screenshot(), target_img, retry_count - 1, is_multi_click, identifier)
 
     def check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()
