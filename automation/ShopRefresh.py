@@ -16,6 +16,7 @@ mystic_buy_confirmation = ac.imread(
     PathConverter.get_current_path("image\\shop_refresh_asset", "MysticBuyConfirmation.png"))
 refresh = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Refresh.png"))
 refresh_confirm = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "RefreshConfirm.png"))
+shop_icon = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Shop.png"))
 
 
 class ShopRefresh:
@@ -32,16 +33,14 @@ class ShopRefresh:
                                          target_img=covenant) is not None
 
     def buy_covenant(self) -> bool:
-        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                 target_img=covenant_buy,
-                                                 identifier="buy covenant in store page"):
+        if not self.utilities.better_click_target(previous_target_img=shop_icon, target_img=covenant_buy,
+                                                  future_target_img=covenant_buy_confirmation,
+                                                  identifier="buy covenant in store page"):
             return False
-        time.sleep(0.2)  # Delay is for animation
-        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                 target_img=covenant_buy_confirmation,
-                                                 identifier="buy covenant in confirmation page"):
+        if not self.utilities.better_click_target(previous_target_img=covenant_buy,
+                                                  target_img=covenant_buy_confirmation, future_target_img=shop_icon,
+                                                  identifier="buy covenant in confirmation page"):
             return False
-        time.sleep(0.2)
         return True
 
     def check_mystic(self) -> bool:
@@ -49,29 +48,25 @@ class ShopRefresh:
                                          target_img=mystic) is not None
 
     def buy_mystic(self) -> bool:
-        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                 target_img=mystic_buy,
-                                                 identifier="buy mystic in store page"):
+        if not self.utilities.better_click_target(previous_target_img=shop_icon, target_img=mystic_buy,
+                                                  future_target_img=mystic_buy_confirmation,
+                                                  identifier="buy mystic in store page"):
             return False
-        time.sleep(0.2)  # Delay is for animation
-        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                 target_img=mystic_buy_confirmation,
-                                                 identifier="buy mystic in confirmation page"):
+        if not self.utilities.better_click_target(previous_target_img=mystic_buy, target_img=mystic_buy_confirmation,
+                                                  future_target_img=shop_icon,
+                                                  identifier="buy mystic in confirmation page"):
             return False
-        time.sleep(0.2)
         return True
 
     def refresh_shop(self) -> bool:
-        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                 target_img=refresh,
-                                                 identifier="refresh in store page"):
+        if not self.utilities.better_click_target(previous_target_img=shop_icon, target_img=refresh,
+                                                  future_target_img=refresh_confirm,
+                                                  identifier="refresh in store page"):
             return False
-        time.sleep(0.2)  # Delay is for animation
-        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                 target_img=refresh_confirm,
-                                                 identifier="refresh in confirmation page"):
+        if not self.utilities.better_click_target(previous_target_img=refresh, target_img=refresh_confirm,
+                                                  future_target_img=shop_icon,
+                                                  identifier="refresh in confirmation page"):
             return False
-        time.sleep(0.2)
         return True
 
     def check_bookmark_and_update_log(self):
@@ -132,4 +127,3 @@ class ShopRefresh:
 
     def stop_shop_refresh(self):
         self.thread_shutdown.set()
-

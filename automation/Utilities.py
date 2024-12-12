@@ -16,11 +16,11 @@ class Utilities:
     def get_numpy_screenshot(self):
         return numpy.array(self.device.screenshot())
 
-    def find_image(self, source_img, target_img) -> dict[any, any]:
-        return ac.find_template(source_img, target_img, 0.90)
+    def find_image(self, source_img, target_img, accuracy: float = 0.94) -> dict[any, any]:
+        return ac.find_template(source_img, target_img, accuracy)
 
-    def save_image(self):
-        self.device.screenshot().save("some.png")
+    def save_image(self, save_file_name: str = "some.png"):
+        self.device.screenshot().save(save_file_name)
 
     def swipe_down(self):
         self.device.swipe(1400, 500, 1400, 200, 0.1)
@@ -75,10 +75,52 @@ class Utilities:
             # Re-click on target with new screenshot
             return self.click_target(self.get_numpy_screenshot(), target_img, retry_count - 1, is_multi_click, identifier)
 
+    def better_click_target(self, previous_target_img=None, target_img=None, future_target_img=None,
+                            retry_count: int = 5, identifier: str = "default") -> bool:
+        if retry_count < 0:
+            print(f"Retry count less than 0, Error!")
+            return False
+        try:
+            source_img = self.get_numpy_screenshot()
+            target_img_pos = self.find_image(source_img, target_img)
+            if target_img_pos:
+                print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
+                result = target_img_pos.get("result")
+                self.device.click(result[0], result[1])
+                # Check if it actually clicked if future_target_img is provided
+                if future_target_img is not None:
+                    # Wait for animation
+                    time.sleep(0.5)
+                    print("looking for future target img")
+                    future_img_result = self.find_image(self.get_numpy_screenshot(), future_target_img)
+                    print(f"future img result: {future_img_result}")
+                    if not future_img_result:
+                        print("future image not found, trying again")
+                        return self.better_click_target(previous_target_img, target_img, future_target_img, retry_count - 1, identifier)
+                return True
+            if previous_target_img is not None:
+                print("looking for previous target img")
+                previous_target_img_pos = self.find_image(source_img, previous_target_img)
+                print(f"identifier: {identifier}, previous img value: {str(previous_target_img_pos)}")
+                result = previous_target_img_pos.get("result")
+                self.device.click(result[0], result[1])
+                return self.better_click_target(previous_target_img, target_img, future_target_img, retry_count - 1, identifier)
+            if future_target_img is not None:
+                print("looking for future target img")
+                if self.find_image(source_img, future_target_img):
+                    return True
+            raise ValueError("Cannot Find Image")
+        except Exception as e:
+            print(f"Unable to find image, Exception: {e}, identifier: {identifier}")
+            is_expedition = self.check_and_refresh_expedition()
+            print(f"Found expedition? {is_expedition}")
+            # Re-click on target with new screenshot
+            return self.better_click_target(previous_target_img, target_img, future_target_img, retry_count - 1, identifier)
+
     def check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()
         if self.find_image(source_img=current_screenshot, target_img=try_again):
-            self.click_target(source_img=current_screenshot, target_img=try_again, identifier="refresh expedition")
+            self.better_click_target(target_img=try_again, identifier="refresh expedition")
             time.sleep(2)  # Wait for a bit to check if there are some other expedition coming in
             self.swipe_down()  # Need to click at least once if another expedition popping up
             return True
