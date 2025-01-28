@@ -25,62 +25,36 @@ class ShopRefresh:
             PathConverter.get_current_path("image\\shop_refresh_asset", "Shop.png"))
 
     def check_covenant(self) -> bool:
-        return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(), target_img=self.covenant,
-                                              confidence=0.93))
+        return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
+                                              target_img=self.covenant, confidence=0.93, color_sensitive=True))
 
-    def buy_covenant(self) -> str:
-        if not self.utilities.click_by_position(target_img=self.covenant,
-                                                future_target_img=self.covenant_buy_confirmation,
-                                                position_offset=(850, 25),
-                                                identifier="buy covenant in store page"):
-            return "Covenant Buy Button Not Found"
-        if not self.utilities.better_click_target(target_img=self.covenant_buy_confirmation,
-                                                  future_target_img=self.shop_icon,
-                                                  identifier="buy covenant in confirmation page"):
-            return "Covenant Buy Confirm Button Not Found"
-        return "Success"
+    def buy_covenant(self):
+        self.utilities.click_by_position(target_img=self.covenant, future_target_img=self.covenant_buy_confirmation,
+                                         position_offset=(850, 25), identifier="Buy Covenant Button")
+        self.utilities.click_target(target_img=self.covenant_buy_confirmation, future_target_img=self.shop_icon,
+                                    identifier="Buy Covenant Confirmation Button")
 
     def check_mystic(self) -> bool:
         return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(), target_img=self.mystic,
-                                              confidence=0.93))
+                                              confidence=0.93, color_sensitive=True))
 
-    def buy_mystic(self) -> str:
-        if not self.utilities.click_by_position(target_img=self.mystic,
-                                                future_target_img=self.mystic_buy_confirmation,
-                                                position_offset=(850, 25),
-                                                identifier="buy mystic in store page"):
-            return "Mystic Buy Button Not Found"
-        if not self.utilities.better_click_target(target_img=self.mystic_buy_confirmation,
-                                                  future_target_img=self.shop_icon,
-                                                  identifier="buy mystic in confirmation page"):
-            return "Mystic Buy Confirm Button Not Found"
-        return "Success"
+    def buy_mystic(self):
+        self.utilities.click_by_position(target_img=self.mystic, future_target_img=self.mystic_buy_confirmation,
+                                         position_offset=(850, 25), identifier="Buy Mystic Button")
+        self.utilities.click_target(target_img=self.mystic_buy_confirmation, future_target_img=self.shop_icon,
+                                    identifier="Buy Mystic Confirmation Button")
 
-    def refresh_shop(self) -> str:
-        if not self.utilities.better_click_target(target_img=self.refresh, future_target_img=self.refresh_confirm,
-                                                  identifier="refresh in store page"):
-            return "Refresh Button Not Found"
-        if not self.utilities.better_click_target(target_img=self.refresh_confirm,
-                                                  future_target_img=self.shop_icon,
-                                                  identifier="refresh in confirmation page"):
-            return "Refresh Confirm Button Not Found"
-        return "Success"
+    def refresh_shop(self):
+        self.utilities.click_target(target_img=self.refresh, future_target_img=self.refresh_confirm,
+                                    identifier="Refresh Button")
+        self.utilities.click_target(target_img=self.refresh_confirm, future_target_img=self.shop_icon,
+                                    identifier="Refresh Confirmation Button")
 
     def check_bookmark_and_update_log(self):
         if self.check_covenant():
-            buy_result = self.buy_covenant()
-            if buy_result == "Success":
-                self.msg_queue.put(UIMessage(UIThreadMessage.COVENANT_FOUND))
-            # This only happens when multiple retry attempt fails
-            else:
-                raise ValueError(buy_result)
+            self.buy_covenant()
         if self.check_mystic():
-            buy_result = self.buy_mystic()
-            if buy_result == "Success":
-                self.msg_queue.put(UIMessage(UIThreadMessage.MYSTIC_FOUND))
-            # This only happens when multiple retry attempt fails
-            else:
-                raise ValueError(buy_result)
+            self.buy_mystic()
 
     def start_store_fresh_iteration(self, total_iteration: int):
         current_iteration = 0
@@ -93,9 +67,7 @@ class ShopRefresh:
                 time.sleep(0.5)
                 self.check_bookmark_and_update_log()
                 # When refresh failed, Stop the application
-                refresh_result = self.refresh_shop()
-                if refresh_result != "Success":
-                    raise ValueError(refresh_result)
+                self.refresh_shop()
                 current_iteration += 1
                 self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, f"Iteration: {current_iteration}"))
             # Check again for last refresh
